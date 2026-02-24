@@ -1,0 +1,158 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id            String   @id @default(uuid())
+  name          String
+  email         String   @unique
+  password_hash String
+  role          Role
+  created_at    DateTime @default(now())
+
+  @@map("users")
+}
+
+enum Role {
+  COORDINATOR
+  OPP
+}
+
+model Teacher {
+  id                  String                @id @default(uuid())
+  name                String
+  registration        String?
+  email               String?
+  phone               String?
+  employment_type     String?
+  weekly_hours_limit  Decimal?
+  monthly_hours_limit Decimal?
+  created_at          DateTime              @default(now())
+  availabilities      TeacherAvailability[]
+  blocks_teacher      TeacherBlock[]
+  blocks              Block[]
+
+  @@map("teachers")
+}
+
+model TeacherAvailability {
+  id          String   @id @default(uuid())
+  teacher_id  String
+  day_of_week Int
+  start_time  DateTime @db.Time
+  end_time    DateTime @db.Time
+  teacher     Teacher  @relation(fields: [teacher_id], references: [id])
+
+  @@map("teacher_availabilities")
+}
+
+model TeacherBlock {
+  id         String   @id @default(uuid())
+  teacher_id String
+  start_date DateTime
+  end_date   DateTime
+  reason     String?
+  teacher    Teacher  @relation(fields: [teacher_id], references: [id])
+
+  @@map("teacher_blocks")
+}
+
+model Room {
+  id             String         @id @default(uuid())
+  name           String
+  capacity       Int?
+  created_at     DateTime       @default(now())
+  block_sessions BlockSession[]
+
+  @@map("rooms")
+}
+
+model Course {
+  id          String     @id @default(uuid())
+  name        String
+  type        CourseType
+  description String?
+  created_at  DateTime   @default(now())
+  ucs         UC[]
+  blocks      Block[]
+
+  @@map("courses")
+}
+
+enum CourseType {
+  FIC
+  REGULAR
+}
+
+model UC {
+  id          String   @id @default(uuid())
+  course_id   String
+  name        String
+  total_hours Decimal
+  order       Int?
+  created_at  DateTime @default(now())
+  course      Course   @relation(fields: [course_id], references: [id])
+  blocks      Block[]
+
+  @@map("ucs")
+}
+
+model Block {
+  id                 String         @id @default(uuid())
+  course_id          String
+  uc_id              String?
+  teacher_id         String
+  name               String
+  total_hours        Decimal
+  start_date         DateTime
+  projected_end_date DateTime?
+  status             BlockStatus    @default(PLANNED)
+  created_at         DateTime       @default(now())
+  course             Course         @relation(fields: [course_id], references: [id])
+  uc                 UC?            @relation(fields: [uc_id], references: [id])
+  teacher            Teacher        @relation(fields: [teacher_id], references: [id])
+  sessions           BlockSession[]
+
+  @@map("blocks")
+}
+
+enum BlockStatus {
+  PLANNED
+  ACTIVE
+  FINISHED
+  CANCELLED
+}
+
+model BlockSession {
+  id          String   @id @default(uuid())
+  block_id    String
+  room_id     String?
+  day_of_week Int
+  start_time  DateTime @db.Time
+  end_time    DateTime @db.Time
+  block       Block    @relation(fields: [block_id], references: [id])
+  room        Room?    @relation(fields: [room_id], references: [id])
+
+  @@map("block_sessions")
+}
+
+model CalendarEvent {
+  id         String            @id @default(uuid())
+  date       DateTime
+  name       String
+  type       CalendarEventType
+  created_at DateTime          @default(now())
+
+  @@map("calendar_events")
+}
+
+enum CalendarEventType {
+  HOLIDAY
+  RECESS
+  BLOCK
+}
