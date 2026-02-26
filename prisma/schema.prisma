@@ -17,11 +17,6 @@ model User {
   @@map("users")
 }
 
-enum Role {
-  COORDINATOR
-  OPP
-}
-
 model Teacher {
   id                  String                @id @default(uuid())
   name                String
@@ -32,9 +27,9 @@ model Teacher {
   weekly_hours_limit  Decimal?
   monthly_hours_limit Decimal?
   created_at          DateTime              @default(now())
+  blocks              Block[]
   availabilities      TeacherAvailability[]
   blocks_teacher      TeacherBlock[]
-  blocks              Block[]
 
   @@map("teachers")
 }
@@ -43,8 +38,8 @@ model TeacherAvailability {
   id          String   @id @default(uuid())
   teacher_id  String
   day_of_week Int
-  start_time  DateTime @db.Time
-  end_time    DateTime @db.Time
+  start_time  DateTime @db.Time(6)
+  end_time    DateTime @db.Time(6)
   teacher     Teacher  @relation(fields: [teacher_id], references: [id])
 
   @@map("teacher_availabilities")
@@ -74,18 +69,13 @@ model Room {
 model Course {
   id          String     @id @default(uuid())
   name        String
-  type        CourseType
   description String?
   created_at  DateTime   @default(now())
-  ucs         UC[]
+  type        CourseType
   blocks      Block[]
+  ucs         UC[]
 
   @@map("courses")
-}
-
-enum CourseType {
-  FIC
-  REGULAR
 }
 
 model UC {
@@ -95,8 +85,8 @@ model UC {
   total_hours Decimal
   order       Int?
   created_at  DateTime @default(now())
-  course      Course   @relation(fields: [course_id], references: [id])
   blocks      Block[]
+  course      Course   @relation(fields: [course_id], references: [id])
 
   @@map("ucs")
 }
@@ -104,7 +94,6 @@ model UC {
 model Block {
   id                 String         @id @default(uuid())
   course_id          String
-  uc_id              String?
   teacher_id         String
   name               String
   total_hours        Decimal
@@ -112,19 +101,13 @@ model Block {
   projected_end_date DateTime?
   status             BlockStatus    @default(PLANNED)
   created_at         DateTime       @default(now())
-  course             Course         @relation(fields: [course_id], references: [id])
-  uc                 UC?            @relation(fields: [uc_id], references: [id])
-  teacher            Teacher        @relation(fields: [teacher_id], references: [id])
+  uc_id              String?
   sessions           BlockSession[]
+  course             Course         @relation(fields: [course_id], references: [id])
+  teacher            Teacher        @relation(fields: [teacher_id], references: [id])
+  uc                 UC?            @relation(fields: [uc_id], references: [id])
 
   @@map("blocks")
-}
-
-enum BlockStatus {
-  PLANNED
-  ACTIVE
-  FINISHED
-  CANCELLED
 }
 
 model BlockSession {
@@ -132,8 +115,8 @@ model BlockSession {
   block_id    String
   room_id     String?
   day_of_week Int
-  start_time  DateTime @db.Time
-  end_time    DateTime @db.Time
+  start_time  DateTime @db.Time(6)
+  end_time    DateTime @db.Time(6)
   block       Block    @relation(fields: [block_id], references: [id])
   room        Room?    @relation(fields: [room_id], references: [id])
 
@@ -148,6 +131,23 @@ model CalendarEvent {
   created_at DateTime          @default(now())
 
   @@map("calendar_events")
+}
+
+enum Role {
+  COORDINATOR
+  OPP
+}
+
+enum CourseType {
+  FIC
+  REGULAR
+}
+
+enum BlockStatus {
+  PLANNED
+  ACTIVE
+  FINISHED
+  CANCELLED
 }
 
 enum CalendarEventType {
