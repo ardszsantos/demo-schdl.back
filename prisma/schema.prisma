@@ -69,6 +69,7 @@ model Room {
 model Course {
   id          String     @id @default(uuid())
   name        String
+  total_hours Decimal?
   description String?
   created_at  DateTime   @default(now())
   type        CourseType
