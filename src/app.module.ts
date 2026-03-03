@@ -9,9 +9,11 @@ import { BlocksModule } from './modules/blocks/blocks.module';
 import { CoursesModule } from './modules/courses/courses.module';
 import { PrismaModule } from './modules/prisma/prisma.module';
 import { RoomsModule } from './modules/rooms/rooms.module';
+import { TeacherModule } from './modules/teacher/teacher.module';
+
 
 @Module({
-  imports: [PrismaModule, AuthModule, CoursesModule, RoomsModule, BlocksModule],
+  imports: [PrismaModule, AuthModule, CoursesModule, RoomsModule, BlocksModule, TeacherModule],
   controllers: [AppController],
   providers: [
     AppService,
