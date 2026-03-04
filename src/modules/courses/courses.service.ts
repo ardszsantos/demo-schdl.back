@@ -9,30 +9,18 @@ import { UpdateUcDto } from './dto/update-uc.dto';
 export class CoursesService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findAll(page: number, limit: number) {
-    const skip = (page - 1) * limit;
-    const [courses, total] = await Promise.all([
-      this.prisma.course.findMany({
-        skip,
-        take: limit,
-        orderBy: { created_at: 'desc' },
-        include: {
-          ucs: { select: { total_hours: true } },
-          _count: { select: { blocks: true } },
-        },
-      }),
-      this.prisma.course.count(),
-    ]);
+  async findAll() {
+    const courses = await this.prisma.course.findMany({
+      include: { ucs: { select: { total_hours: true } } },
+    });
 
-    const data = courses.map(({ ucs, ...course }) => ({
+    return courses.map(({ ucs, ...course }) => ({
       ...course,
-      ucs_count: ucs.length,
-      ...(course.type === 'REGULAR' && {
-        ucs_total_hours: ucs.reduce((sum, uc) => sum + Number(uc.total_hours), 0),
-      }),
+      total_hours:
+        course.type === 'REGULAR'
+          ? ucs.reduce((sum, uc) => sum + Number(uc.total_hours), 0)
+          : course.total_hours,
     }));
-
-    return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
   }
 
   async findOne(id: string) {
@@ -44,14 +32,15 @@ export class CoursesService {
     if (!course) throw new NotFoundException('Course not found');
 
     if (course.type === 'REGULAR') {
-      const ucs_total_hours = course.ucs.reduce(
+      const total_hours = course.ucs.reduce(
         (sum, uc) => sum + Number(uc.total_hours),
         0,
       );
-      return { ...course, ucs_total_hours };
+      return { ...course, total_hours };
     }
 
-    return course;
+    const { ucs, ...ficCourse } = course;
+    return ficCourse;
   }
 
   async create(dto: CreateCourseDto) {

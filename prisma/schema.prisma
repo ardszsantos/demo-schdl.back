@@ -18,50 +18,24 @@ model User {
 }
 
 model Teacher {
-  id                  String                @id @default(uuid())
-  name                String
-  registration        String?
-  email               String?
-  phone               String?
-  employment_type     String?
-  weekly_hours_limit  Decimal?
-  monthly_hours_limit Decimal?
-  created_at          DateTime              @default(now())
-  blocks              Block[]
-  availabilities      TeacherAvailability[]
-  blocks_teacher      TeacherBlock[]
+  id              String   @id @default(uuid())
+  name            String
+  registration    String?
+  email           String?
+  phone           String?
+  employment_type String?
+  created_at      DateTime @default(now())
+  blocks          Block[]
 
   @@map("teachers")
 }
 
-model TeacherAvailability {
-  id          String   @id @default(uuid())
-  teacher_id  String
-  day_of_week Int
-  start_time  DateTime @db.Time(6)
-  end_time    DateTime @db.Time(6)
-  teacher     Teacher  @relation(fields: [teacher_id], references: [id])
-
-  @@map("teacher_availabilities")
-}
-
-model TeacherBlock {
-  id         String   @id @default(uuid())
-  teacher_id String
-  start_date DateTime
-  end_date   DateTime
-  reason     String?
-  teacher    Teacher  @relation(fields: [teacher_id], references: [id])
-
-  @@map("teacher_blocks")
-}
-
 model Room {
-  id             String         @id @default(uuid())
-  name           String
-  capacity       Int?
-  created_at     DateTime       @default(now())
-  block_sessions BlockSession[]
+  id         String   @id @default(uuid())
+  name       String
+  capacity   Int?
+  created_at DateTime @default(now())
+  blocks     Block[]
 
   @@map("rooms")
 }
@@ -94,39 +68,40 @@ model UC {
 
 model Block {
   id                 String         @id @default(uuid())
-  course_id          String
   teacher_id         String
+  course_id          String
+  uc_id              String?
+  room_id            String?
   name               String
   total_hours        Decimal
-  start_date         DateTime
-  projected_end_date DateTime?
+  days_of_week       Int[]
+  start_time         DateTime       @db.Time(6)
+  end_time           DateTime       @db.Time(6)
+  start_date         DateTime       @db.Date
+  projected_end_date DateTime?      @db.Date
   status             BlockStatus    @default(PLANNED)
   created_at         DateTime       @default(now())
-  uc_id              String?
   sessions           BlockSession[]
   course             Course         @relation(fields: [course_id], references: [id])
   teacher            Teacher        @relation(fields: [teacher_id], references: [id])
   uc                 UC?            @relation(fields: [uc_id], references: [id])
+  room               Room?          @relation(fields: [room_id], references: [id])
 
   @@map("blocks")
 }
 
 model BlockSession {
-  id          String   @id @default(uuid())
-  block_id    String
-  room_id     String?
-  day_of_week Int
-  start_time  DateTime @db.Time(6)
-  end_time    DateTime @db.Time(6)
-  block       Block    @relation(fields: [block_id], references: [id])
-  room        Room?    @relation(fields: [room_id], references: [id])
+  id       String   @id @default(uuid())
+  block_id String
+  date     DateTime @db.Date
+  block    Block    @relation(fields: [block_id], references: [id])
 
   @@map("block_sessions")
 }
 
 model CalendarEvent {
   id         String            @id @default(uuid())
-  date       DateTime
+  date       DateTime          @db.Date
   name       String
   type       CalendarEventType
   created_at DateTime          @default(now())
