@@ -8,11 +8,13 @@ export class RoomsService {
   constructor(private readonly prisma: PrismaService) {}
 
   async findAll(page: number, limit: number) {
-    const skip = (page - 1) * limit;
+    const safePage = Math.max(1, Number(page) || 1);
+    const safeLimit = Math.max(1, Number(limit) || 20);
+    const skip = (safePage - 1) * safeLimit;
     const [data, total] = await Promise.all([
       this.prisma.room.findMany({
-        skip,
-        take: limit,
+        ...(skip > 0 ? { skip } : {}),
+        take: safeLimit,
         orderBy: { name: 'asc' },
       }),
       this.prisma.room.count(),
@@ -21,9 +23,9 @@ export class RoomsService {
     return {
       data,
       total,
-      page,
-      limit,
-      totalPages: Math.ceil(total / limit),
+      page: safePage,
+      limit: safeLimit,
+      totalPages: Math.ceil(total / safeLimit),
     };
   }
 
