@@ -17,7 +17,10 @@ async function bootstrap() {
   app.useGlobalFilters(new GlobalExceptionFilter());
 
   app.enableCors({
-    origin: 'http://localhost:5173',
+    origin: [
+      'http://localhost:5173',
+      'https://demo-schdl-front.vercel.app',
+    ],
     credentials: true,
   });
 
