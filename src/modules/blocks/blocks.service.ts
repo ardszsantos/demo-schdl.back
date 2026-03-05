@@ -86,7 +86,18 @@ export class BlocksService {
       if (!room) throw new NotFoundException('Room not found');
     }
 
-    // 2. Calcular horas por sessão
+    // 2. Validar que start_date cai em um dos days_of_week
+    const startDateObj = new Date(dto.start_date + 'T12:00:00Z');
+    const startDateIsoDow = jsToIsoDow(startDateObj.getUTCDay());
+    if (!dto.days_of_week.includes(startDateIsoDow)) {
+      const firstValid = this.findFirstValidDay(dto.start_date, dto.days_of_week);
+      throw new BadRequestException(
+        `A data de início informada (${dto.start_date}) não é um dos dias da semana selecionados para esta alocação. ` +
+        `A primeira data possível seria ${firstValid}.`,
+      );
+    }
+
+    // 3. Calcular horas por sessão
     const startTime = timeToDate(dto.start_time);
     const endTime = timeToDate(dto.end_time);
     const hoursPerSession =
@@ -209,6 +220,17 @@ export class BlocksService {
     const effectiveStartTime = dto.start_time ? timeToDate(dto.start_time) : block.start_time;
     const effectiveEndTime = dto.end_time ? timeToDate(dto.end_time) : block.end_time;
 
+    // Validar que effectiveStartDate cai em um dos effectiveDaysOfWeek
+    const effStartDateObj = new Date(effectiveStartDate + 'T12:00:00Z');
+    const effStartDateIsoDow = jsToIsoDow(effStartDateObj.getUTCDay());
+    if (!effectiveDaysOfWeek.includes(effStartDateIsoDow)) {
+      const firstValid = this.findFirstValidDay(effectiveStartDate, effectiveDaysOfWeek);
+      throw new BadRequestException(
+        `A data de início informada (${effectiveStartDate}) não é um dos dias da semana selecionados para esta alocação. ` +
+        `A primeira data possível seria ${firstValid}.`,
+      );
+    }
+
     const hoursPerSession = (effectiveEndTime.getTime() - effectiveStartTime.getTime()) / (1000 * 60 * 60);
     if (hoursPerSession <= 0) throw new BadRequestException('end_time must be after start_time');
 
@@ -292,6 +314,18 @@ export class BlocksService {
     });
     if (!session) throw new NotFoundException('Session not found');
     return this.prisma.blockSession.delete({ where: { id: sessionId } });
+  }
+
+  // Retorna a primeira data a partir de startDate que caia em um dos daysOfWeek (ISO 1=Seg...7=Dom)
+  private findFirstValidDay(startDate: string, daysOfWeek: number[]): string {
+    const current = new Date(startDate + 'T12:00:00Z');
+    for (let i = 0; i < 7; i++) {
+      if (daysOfWeek.includes(jsToIsoDow(current.getUTCDay()))) {
+        return current.toISOString().split('T')[0];
+      }
+      current.setUTCDate(current.getUTCDate() + 1);
+    }
+    return startDate; // fallback (nunca deve chegar aqui)
   }
 
   // Gera as datas reais das sessões, pulando dias bloqueados
