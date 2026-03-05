@@ -156,6 +156,7 @@ export class BlocksService {
           uc_id: dto.uc_id,
           room_id: dto.room_id,
           name: dto.name,
+          color: dto.color,
           total_hours: dto.total_hours,
           days_of_week: dto.days_of_week,
           start_time: startTime,

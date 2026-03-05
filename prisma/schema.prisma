@@ -73,6 +73,7 @@ model Block {
   uc_id              String?
   room_id            String?
   name               String
+  color              String?
   total_hours        Decimal
   days_of_week       Int[]
   start_time         DateTime       @db.Time(6)
