@@ -61,7 +61,7 @@ model UC {
   order       Int?
   created_at  DateTime @default(now())
   blocks      Block[]
-  course      Course   @relation(fields: [course_id], references: [id])
+  course      Course   @relation(fields: [course_id], references: [id], onDelete: Cascade)
 
   @@map("ucs")
 }
@@ -83,7 +83,7 @@ model Block {
   status             BlockStatus    @default(PLANNED)
   created_at         DateTime       @default(now())
   sessions           BlockSession[]
-  course             Course         @relation(fields: [course_id], references: [id])
+  course             Course         @relation(fields: [course_id], references: [id], onDelete: Cascade)
   teacher            Teacher        @relation(fields: [teacher_id], references: [id])
   uc                 UC?            @relation(fields: [uc_id], references: [id])
   room               Room?          @relation(fields: [room_id], references: [id])
@@ -95,7 +95,7 @@ model BlockSession {
   id       String   @id @default(uuid())
   block_id String
   date     DateTime @db.Date
-  block    Block    @relation(fields: [block_id], references: [id])
+  block    Block    @relation(fields: [block_id], references: [id], onDelete: Cascade)
 
   @@map("block_sessions")
 }
