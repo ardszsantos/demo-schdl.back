@@ -10,4 +10,5 @@ export class CreateBlockDto {
   projected_end_date?: string;
   uc_id?: string;
   room_id?: string;
+  color?: string;
 }
